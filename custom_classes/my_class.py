@@ -1,5 +1,7 @@
 import math
 
+from custom_classes.transmissions import ManualTransmission
+
 
 class IdealCar(object):
 
@@ -64,6 +66,9 @@ class IdealCar(object):
         """
         return ((2 * self._current_ke) / self.mass) ** .5
 
+    def ms(self):
+        return self._speed()
+
     def mph(self):
         """
         Display the current speed of the car in miles per hour
@@ -98,11 +103,11 @@ class ManualCar(IdealCar):
 
     """
 
-    gears_unit = int
+    gears_unit = dict
     rpm_unit = float
 
-    def __init__(self, engine_power: int, engine_torque: int, braking_power: int, mass: float, gears: int,
-                 redline: float, current_speed=0., simulation_tick=1.):
+    def __init__(self, engine_power: int, engine_torque: int, braking_power: int, mass: float,
+                 transmission: ManualTransmission, current_speed=0., simulation_tick=1.):
         """
         Adds the number of engine gears and an rpm red line to the parent __init__ function
 
@@ -113,22 +118,28 @@ class ManualCar(IdealCar):
         super(ManualCar, self).__init__(engine_power, engine_torque, braking_power, mass, current_speed,
                                         simulation_tick)
 
-        # Validate the types of the input parameters
-        if type(gears) is not self.gears_unit:
-            raise TypeError("Type of engine_power is {}, needs to be {}".format(type(gears),
-                                                                                self.gears_unit))
-        if type(redline) is not self.rpm_unit:
-            raise TypeError("Type of engine_power is {}, needs to be {}".format(type(redline),
-                                                                                self.rpm_unit))
-        self.gears = gears
-        self.redline = redline
+        self.transmission = transmission
 
 
 if __name__ == '__main__':
-    viper = ManualCar(engine_power=485000, engine_torque=813, braking_power=600, current_speed=0.,
-                      mass=1521., simulation_tick=.001, redline=5000., gears=6)
 
-    print(viper.mph())
-    viper.accelerate_for_time(3)
-    print(viper.mph())
+    current_speed = 25.
+
+    gears_data = {
+        1: 2.26,
+        2: 1.58,
+        3: 1.19,
+        4: 1.00,
+        5: 0.77,
+        6: 0.63,
+    }
+    transmission = ManualTransmission(gear_data=gears_data, final_drive_ratio=3.55, wheel_radius=.2413,
+                                      redline=6150., speed=current_speed)
+
+    viper = ManualCar(engine_power=485000, engine_torque=813, braking_power=600, current_speed=current_speed,
+                      mass=1521., simulation_tick=.001, transmission=transmission)
+
+    viper.accelerate_for_time(1)
+
+    viper.transmission.update_rpm(viper.ms())
 
