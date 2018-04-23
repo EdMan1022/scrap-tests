@@ -53,6 +53,8 @@ class IdealCar(object):
         self.current_speed = current_speed
         self.mass = mass
         self.simulation_tick = simulation_tick
+        self._current_time = 0.
+        self._current_ke = .5 * self.mass * self.current_speed ** 2.
 
     def mph(self):
         """
@@ -68,7 +70,8 @@ class IdealCar(object):
 
         :return: (float) current acceleration in m/s^2
         """
-        return (self.engine_power / (2 * self.mass * self.simulation_tick)) ** .5
+        self._current_time += self.simulation_tick
+        return (self.engine_power/(2 * self.mass * self.simulation_tick)) ** .5
 
     def _accelerate(self):
         """
@@ -76,13 +79,13 @@ class IdealCar(object):
 
         :return: None
         """
-        self.current_speed += self._current_acceleration() * self.simulation_tick
+        self._current_ke += self.engine_power * self.simulation_tick
 
     def accelerate_for_time(self, time):
         """
         Accelerates the car for the entered time
 
-        :param time:
+        :param time: (int, float) Time car will accelerate for in seconds
         :return: None
         """
         number_of_acceleration_steps = int(math.floor(time / self.simulation_tick))
@@ -96,11 +99,35 @@ class ManualCar(IdealCar):
 
     """
 
+    gears_unit = int
+    rpm_unit = float
 
+    def __init__(self, engine_power: int, engine_torque: int, braking_power: int, mass: float, gears: int,
+                 redline: float, current_speed=0., simulation_tick=1.):
+        """
+        Adds the number of engine gears and an rpm red line to the parent __init__ function
+
+        :param gears: (int) Number of gears in the gear box
+        :param redline: (float) The maximum allowable engine speed
+        """
+
+        super(ManualCar, self).__init__(engine_power, engine_torque, braking_power, mass, current_speed,
+                                        simulation_tick)
+
+        # Validate the types of the input parameters
+        if type(gears) is not self.gears_unit:
+            raise TypeError("Type of engine_power is {}, needs to be {}".format(type(gears),
+                                                                                self.gears_unit))
+        if type(redline) is not self.rpm_unit:
+            raise TypeError("Type of engine_power is {}, needs to be {}".format(type(redline),
+                                                                                self.rpm_unit))
+        self.gears = gears
+        self.redline = redline
 
 
 if __name__ == '__main__':
-    viper = IdealCar(engine_power=485000, engine_torque=813, braking_power=600, current_speed=0., mass=1521.)
+    viper = ManualCar(engine_power=485000, engine_torque=813, braking_power=600, current_speed=0.,
+                      mass=1521., simulation_tick=2., redline=5000., gears=6)
 
     print(viper.mph())
     viper.accelerate_for_time(3)
