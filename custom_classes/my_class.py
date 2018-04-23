@@ -1,7 +1,7 @@
 import math
 
 
-class Car(object):
+class IdealCar(object):
 
     wheels = 4
 
@@ -10,13 +10,13 @@ class Car(object):
     braking_power_unit = int
     aerodynamic_resistance_unit = float
     mass_unit = float
+    simulation_unit = float
 
     _speed_unit = float
     _mps_to_mph = 2.23694
-    _simulation_tick = 1.  # Time step of the simulation (in seconds)
 
     def __init__(self, engine_power: int, engine_torque: int, braking_power: int, mass: float,
-                 current_speed=0., ):
+                 current_speed=0., simulation_tick=1.):
         """
         Creates a specific car and specifies its base performance characteristics
 
@@ -43,12 +43,16 @@ class Car(object):
         if type(mass) is not self.mass_unit:
             raise TypeError("Type of mass is {}, needs to be {}".format(type(mass),
                                                                         self.mass_unit))
+        if type(simulation_tick) is not self.simulation_unit:
+            raise TypeError("Type of simulation tick is {}, needs to be {}".format(type(simulation_tick),
+                                                                                   self.simulation_unit))
 
         self.engine_power = engine_power
         self.engine_torque = engine_torque
         self.braking_power = braking_power
         self.current_speed = current_speed
         self.mass = mass
+        self.simulation_tick = simulation_tick
 
     def mph(self):
         """
@@ -64,7 +68,7 @@ class Car(object):
 
         :return: (float) current acceleration in m/s^2
         """
-        return (self.engine_power/(2 * self.mass * self._simulation_tick)) ** .5
+        return (self.engine_power / (2 * self.mass * self.simulation_tick)) ** .5
 
     def _accelerate(self):
         """
@@ -72,7 +76,7 @@ class Car(object):
 
         :return: None
         """
-        self.current_speed += self._current_acceleration() * self._simulation_tick
+        self.current_speed += self._current_acceleration() * self.simulation_tick
 
     def accelerate_for_time(self, time):
         """
@@ -81,13 +85,22 @@ class Car(object):
         :param time:
         :return: None
         """
-        number_of_acceleration_steps = int(math.floor(time/self._simulation_tick))
+        number_of_acceleration_steps = int(math.floor(time / self.simulation_tick))
         for i in range(number_of_acceleration_steps):
             self._accelerate()
 
 
+class ManualCar(IdealCar):
+    """
+    Introduces logic to handle a cars power output given its current RPM and gearing
+
+    """
+
+
+
+
 if __name__ == '__main__':
-    viper = Car(engine_power=485000, engine_torque=813, braking_power=600, current_speed=0., mass=1521.)
+    viper = IdealCar(engine_power=485000, engine_torque=813, braking_power=600, current_speed=0., mass=1521.)
 
     print(viper.mph())
     viper.accelerate_for_time(3)
