@@ -16,6 +16,7 @@ class IdealCar(object):
 
     _speed_unit = float
     _mps_to_mph = 2.23694
+    _noise_interval = 40
 
     def __init__(self, engine_power: int, engine_torque: int, braking_power: int, mass: float,
                  current_speed=0., simulation_tick=1.):
@@ -85,6 +86,9 @@ class IdealCar(object):
         """
         self._current_ke += self.engine_power * self.simulation_tick
 
+    def _engine_noise(self):
+        print('vrrrrrrrmmmmm')
+
     def accelerate_for_time(self, time):
         """
         Accelerates the car for the entered time
@@ -96,6 +100,9 @@ class IdealCar(object):
         for i in range(number_of_acceleration_steps):
             self._accelerate()
 
+            if i % self._noise_interval == 0:
+                self._engine_noise()
+
 
 class ManualCar(IdealCar):
     """
@@ -103,16 +110,13 @@ class ManualCar(IdealCar):
 
     """
 
-    gears_unit = dict
     rpm_unit = float
+    _tach_scale = 10.
 
     def __init__(self, engine_power: int, engine_torque: int, braking_power: int, mass: float,
                  transmission: ManualTransmission, current_speed=0., simulation_tick=1.):
         """
-        Adds the number of engine gears and an rpm red line to the parent __init__ function
-
-        :param gears: (int) Number of gears in the gear box
-        :param redline: (float) The maximum allowable engine speed
+        Adds the transmission to the parent init function
         """
 
         super(ManualCar, self).__init__(engine_power, engine_torque, braking_power, mass, current_speed,
@@ -120,10 +124,40 @@ class ManualCar(IdealCar):
 
         self.transmission = transmission
 
+    def _set_speed(self, speed):
+        """
+        Sets the car's kinetic energy from a given external speed
+
+        :param speed:
+        :return:
+        """
+        self._current_ke = .5 * self.mass * speed ** 2.
+
+    def _accelerate(self):
+        """
+        Adds a transmission validation check to the accelerate step
+
+        If the transmission is above the redline, return the engine speed to the redline
+        and return the car's road speed to the speed derived from redline
+        :return: None
+        """
+        super(ManualCar, self)._accelerate()
+        try:
+            self.transmission.update_rpm(self._speed())
+        except ValueError:
+            self._set_speed(self.transmission.speed_from_transmission())
+
+    def _engine_noise(self):
+
+        if self.transmission.rpm == self.transmission.redline:
+            print('SCRREEEEEEE')
+        else:
+            print('|' * int((self.transmission.rpm / self.transmission.redline) * self._tach_scale))
+
 
 if __name__ == '__main__':
 
-    current_speed = 25.
+    current_speed = 0.
 
     gears_data = {
         1: 2.26,
@@ -139,7 +173,15 @@ if __name__ == '__main__':
     viper = ManualCar(engine_power=485000, engine_torque=813, braking_power=600, current_speed=current_speed,
                       mass=1521., simulation_tick=.001, transmission=transmission)
 
-    viper.accelerate_for_time(1)
+    viper.accelerate_for_time(.25)
 
-    viper.transmission.update_rpm(viper.ms())
+    viper.transmission.manual_shift(2)
+
+    viper.accelerate_for_time(1.)
+
+    viper.transmission.manual_shift(3)
+
+    viper.accelerate_for_time(1.)
+
+    print(viper.mph())
 

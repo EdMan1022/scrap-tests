@@ -19,7 +19,7 @@ class ManualTransmission(Transmission):
         self.wheel_radius = wheel_radius
         self.redline = redline
 
-        self._rpm = None
+        self.rpm = None
         self._gear_index = 0
         self._gear = self.gears[self._gear_index]  # Start the transmission in first gear
 
@@ -32,7 +32,7 @@ class ManualTransmission(Transmission):
         :param speed:
         :return:
         """
-        self._rpm = speed * 60. * 1/(self.wheel_radius * 2 * math.pi) * self._gear * self.final_drive_ratio
+        self.rpm = speed * 60. * 1 / (self.wheel_radius * 2 * math.pi) * self._gear * self.final_drive_ratio
 
     def speed_from_transmission(self):
         """
@@ -40,7 +40,7 @@ class ManualTransmission(Transmission):
 
         :return: (float) Estimated road speed from the transmissions state (m/s)
         """
-        return self._rpm * (1./60.) * self.wheel_radius * 2 * math.pi * 1/(self._gear * self.final_drive_ratio)
+        return self.rpm * (1. / 60.) * self.wheel_radius * 2 * math.pi * 1 / (self._gear * self.final_drive_ratio)
 
     def _upshift(self):
         """
@@ -51,6 +51,21 @@ class ManualTransmission(Transmission):
         """
         self._gear_index += 1
         self._gear = self.gears[self._gear_index]
+
+    def manual_shift(self, gear_index):
+        """
+        Enables external user to try to shift the transmission into the given gear_index
+
+        :return:
+        """
+        try:
+            speed = self.speed_from_transmission()
+            self._gear_index = gear_index
+            self._gear = self.gears[self._gear_index]
+            self.update_rpm(speed)
+            print('--------CLUNK-----------')
+        except ValueError:
+            print('invalid_shift')
 
     def _set_rpm_gear(self, speed):
         """
@@ -67,11 +82,11 @@ class ManualTransmission(Transmission):
         """
 
         self._calculate_current_rpm(speed)
-        invalid_gear = self._rpm > self.redline
+        invalid_gear = self.rpm > self.redline
         while invalid_gear:
             self._upshift()
             self._calculate_current_rpm(speed)
-            invalid_gear = self._rpm > self.redline
+            invalid_gear = self.rpm > self.redline
 
     def update_rpm(self, speed):
         """
@@ -81,7 +96,9 @@ class ManualTransmission(Transmission):
         :return: None
         """
         self._calculate_current_rpm(speed)
-
+        if self.rpm > self.redline:
+            self.rpm = self.redline
+            raise ValueError('rpm from given speed over redline')
         pass
 
 
