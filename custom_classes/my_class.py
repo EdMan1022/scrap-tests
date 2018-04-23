@@ -56,22 +56,30 @@ class IdealCar(object):
         self._current_time = 0.
         self._current_ke = .5 * self.mass * self.current_speed ** 2.
 
+    def _speed(self):
+        """
+        Derives the current speed of the car from it's Kinetic energy
+
+        :return: (float) current speed in meters/second
+        """
+        return ((2 * self._current_ke) / self.mass) ** .5
+
     def mph(self):
         """
         Display the current speed of the car in miles per hour
 
         :return: (float) current speed of the car converted to miles per hour
         """
-        return self.current_speed * self._mps_to_mph
+        return self._speed() * self._mps_to_mph
 
-    def _current_acceleration(self):
-        """
-        Derives the current instantaneous acceleration of the car from its mass and power (over the next time step)
-
-        :return: (float) current acceleration in m/s^2
-        """
-        self._current_time += self.simulation_tick
-        return (self.engine_power/(2 * self.mass * self.simulation_tick)) ** .5
+    # def _current_acceleration(self):
+    #     """
+    #     Derives the current instantaneous acceleration of the car from its mass and power (over the next time step)
+    #
+    #     :return: (float) current acceleration in m/s^2
+    #     """
+    #     self._current_time += self.simulation_tick
+    #     return (self.engine_power/(2 * self.mass * self.simulation_tick)) ** .5
 
     def _accelerate(self):
         """
@@ -127,7 +135,7 @@ class ManualCar(IdealCar):
 
 if __name__ == '__main__':
     viper = ManualCar(engine_power=485000, engine_torque=813, braking_power=600, current_speed=0.,
-                      mass=1521., simulation_tick=2., redline=5000., gears=6)
+                      mass=1521., simulation_tick=.001, redline=5000., gears=6)
 
     print(viper.mph())
     viper.accelerate_for_time(3)
