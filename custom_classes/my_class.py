@@ -1,3 +1,4 @@
+import math
 
 
 class Car(object):
@@ -12,6 +13,7 @@ class Car(object):
 
     _speed_unit = float
     _mps_to_mph = 2.23694
+    _simulation_tick = 1.  # Time step of the simulation (in seconds)
 
     def __init__(self, engine_power: int, engine_torque: int, braking_power: int, mass: float,
                  current_speed=0., ):
@@ -58,22 +60,36 @@ class Car(object):
 
     def _current_acceleration(self):
         """
-        Derives the current instantaneous acceleration of the car from its mass and power (over the next second)
+        Derives the current instantaneous acceleration of the car from its mass and power (over the next time step)
 
         :return: (float) current acceleration in m/s^2
         """
-        return self.engine_power
+        return (self.engine_power/(2 * self.mass * self._simulation_tick)) ** .5
 
     def _accelerate(self):
         """
-        Increases the speed of the car over the next second based on the cars engine_hp
+        Increases the speed of the car over the next simulation time step based on the cars engine_power
 
         :return: None
         """
+        self.current_speed += self._current_acceleration() * self._simulation_tick
+
+    def accelerate_for_time(self, time):
+        """
+        Accelerates the car for the entered time
+
+        :param time:
+        :return: None
+        """
+        number_of_acceleration_steps = int(math.floor(time/self._simulation_tick))
+        for i in range(number_of_acceleration_steps):
+            self._accelerate()
 
 
 if __name__ == '__main__':
-    viper = Car(engine_power=485, engine_torque=813, braking_power=600, current_speed=20.3, mass=1521.)
+    viper = Car(engine_power=485000, engine_torque=813, braking_power=600, current_speed=0., mass=1521.)
 
+    print(viper.mph())
+    viper.accelerate_for_time(3)
     print(viper.mph())
 
