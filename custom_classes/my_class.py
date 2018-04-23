@@ -72,15 +72,6 @@ class IdealCar(object):
         """
         return self._speed() * self._mps_to_mph
 
-    # def _current_acceleration(self):
-    #     """
-    #     Derives the current instantaneous acceleration of the car from its mass and power (over the next time step)
-    #
-    #     :return: (float) current acceleration in m/s^2
-    #     """
-    #     self._current_time += self.simulation_tick
-    #     return (self.engine_power/(2 * self.mass * self.simulation_tick)) ** .5
-
     def _accelerate(self):
         """
         Increases the speed of the car over the next simulation time step based on the cars engine_power
